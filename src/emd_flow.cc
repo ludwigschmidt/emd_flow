@@ -1,0 +1,231 @@
+#include <vector>
+#include <cmath>
+#include <cstdio>
+#include <ctime>
+#include <memory>
+#include <string>
+#include <limits>
+
+#include "emd_flow_network.h"
+#include "emd_flow_network_factory.h"
+#include "emd_flow.h"
+
+using namespace std;
+
+const int kOutputBufferSize = 10000;
+char output_buffer[kOutputBufferSize];
+
+// Make lambda larger until we find a solution that fits into the EMD budget.
+// Returns true if we find a solution in [emd_bound_low, emd_bound_high].
+bool increase_lambda(const emd_flow_args& args, emd_flow_result* result,
+    EMDFlowNetwork* network, double* lambda_high);
+
+// Make lambda smaller until we find a solution that does not fit into the
+// EMD budget. Return true if we find a solution in
+// [emd_bound_low, emd_bound_high].
+bool decrease_lambda(const emd_flow_args& args, double current_lambda_high,
+    emd_flow_result* result, EMDFlowNetwork* network, double* lambda_low);
+
+// Binary search over lambda
+void binary_search_lambda(const emd_flow_args& args, double lambda_low,
+    double lambda_high, emd_flow_result* result, EMDFlowNetwork* network);
+
+
+// Main routine for computing the EMD flow.
+void emd_flow(const emd_flow_args& args, emd_flow_result* result) {
+  clock_t total_time_begin = clock();
+
+  int r = args.x.size();
+  int c = args.x[0].size();
+
+  if (args.verbose) {
+    snprintf(output_buffer, kOutputBufferSize, "r = %d,  c = %d,  k = %d,  "
+        "emd_bound_low = %d, emd_bound_high = %d\n", r, c, args.k,
+        args.emd_bound_low, args.emd_bound_high);
+    args.output_function(output_buffer);
+    snprintf(output_buffer, kOutputBufferSize, "lambda_low = %e, "
+        "lambda_high = %e, num_search_iterations = %d\n", args.lambda_low,
+        args.lambda_high, args.num_search_iterations);
+    args.output_function(output_buffer);
+  }
+
+  // build graph
+  clock_t graph_construction_time_begin = clock();
+
+  auto_ptr<EMDFlowNetwork> network =
+      EMDFlowNetworkFactory::create_EMD_flow_network(args.x,
+      args.outdegree_vertical_distance, args.alg_type);
+  network->set_sparsity(args.k);
+
+  clock_t graph_construction_time = clock() - graph_construction_time_begin;
+
+  if (args.verbose) {
+    snprintf(output_buffer, kOutputBufferSize, "The graph has %d nodes and %d "
+        "edges.\n", network->get_num_nodes(), network->get_num_edges());
+    args.output_function(output_buffer);
+    snprintf(output_buffer, kOutputBufferSize, "Total construction time: %f "
+        "s\n ", static_cast<double>(graph_construction_time) / CLOCKS_PER_SEC);
+    args.output_function(output_buffer);
+  }
+
+  double lambda_high = args.lambda_high;
+  double lambda_low = args.lambda_low;
+
+  if (!increase_lambda(args, result, network.get(), &lambda_high)) {
+    if (!decrease_lambda(args, lambda_high, result, network.get(),
+        &lambda_low)) {
+      binary_search_lambda(args, lambda_low, lambda_high, result,
+          network.get());
+    }
+  }
+
+  if (args.verbose) {
+    snprintf(output_buffer, kOutputBufferSize, "Final l: %e, amp sum: %e, "
+        "EMD cost: %d\n", lambda_high, result->amp_sum, result->emd_cost);
+    args.output_function(output_buffer);
+  }
+
+  clock_t total_time = clock() - total_time_begin;
+  if (args.verbose) {
+    snprintf(output_buffer, kOutputBufferSize, "Total time %f s\n",
+        static_cast<double>(total_time) / CLOCKS_PER_SEC);
+    args.output_function(output_buffer);
+
+    string performance_diagnostics;
+    network->get_performance_diagnostics(&performance_diagnostics);
+    snprintf(output_buffer, kOutputBufferSize, "Performance diagnostics:\n%s\n",
+        performance_diagnostics.c_str());
+    args.output_function(output_buffer);
+  }
+
+  return;
+}
+
+void binary_search_lambda(const emd_flow_args& args, double lambda_low,
+    double lambda_high, emd_flow_result* result, EMDFlowNetwork* network) {
+
+  // binary search on lambda
+  if (args.verbose) {
+    snprintf(output_buffer, kOutputBufferSize, "Binary search on lambda ...\n");
+    args.output_function(output_buffer);
+  }
+
+  int cur_emd_cost = 0;
+  double cur_amp_sum = 0;
+  int current_iteration = 1;
+
+  while (current_iteration <= args.num_search_iterations
+      && (cur_emd_cost < args.emd_bound_low
+      || cur_emd_cost > args.emd_bound_high)) {
+    ++current_iteration;
+    double cur_lambda = (lambda_high + lambda_low) / 2;
+    network->run_flow(cur_lambda);
+    cur_emd_cost = network->get_EMD_used();
+    cur_amp_sum = network->get_supported_amplitude_sum();
+
+    if (args.verbose) {
+      snprintf(output_buffer, kOutputBufferSize, "l_cur: %e  (l_low: %e, "
+          "l_high: %e)  EMD: %d  amp sum: %e\n", cur_lambda, lambda_low,
+          lambda_high, cur_emd_cost, cur_amp_sum);
+      args.output_function(output_buffer);
+    }
+
+    if (cur_emd_cost <= args.emd_bound_high) {
+      lambda_high = cur_lambda;
+    } else {
+      lambda_low = cur_lambda;
+    }
+  }
+
+  // TODO: don't rerun flow here?
+  // run with final lambda
+  network->run_flow(lambda_high);
+  result->final_lambda_low = lambda_low;
+  result->final_lambda_high = lambda_high;
+  result->emd_cost = network->get_EMD_used();
+  result->amp_sum = network->get_supported_amplitude_sum();
+  network->get_support(result->support);
+}
+
+// Increase lambda until we find a lambda such that the EMD cost is smaller
+// than the lower EMD bound. If we find a feasible solution during the process,
+// we return true. Otherwise we return false.
+bool increase_lambda(const emd_flow_args& args, emd_flow_result* result,
+    EMDFlowNetwork* network, double* lambda_high) {
+  if (args.verbose) {
+    snprintf(output_buffer, kOutputBufferSize,
+        "Finding large enough value of lambda ...\n");
+    args.output_function(output_buffer);
+  }
+  while (true) {
+    network->run_flow(*lambda_high);
+    int cur_emd_cost = network->get_EMD_used();
+    double cur_amp_sum = network->get_supported_amplitude_sum();
+
+    if (args.verbose) {
+      snprintf(output_buffer, kOutputBufferSize, "l: %e  EMD: %d  amp sum: %e"
+          "\n", *lambda_high, cur_emd_cost, cur_amp_sum);
+      args.output_function(output_buffer);
+    }
+
+    if (cur_emd_cost <= args.emd_bound_high) {
+      if (cur_emd_cost >= args.emd_bound_low) {
+        result->final_lambda_low = args.lambda_low;
+        result->final_lambda_high = *lambda_high;
+        result->emd_cost = cur_emd_cost;
+        result->amp_sum = cur_amp_sum;
+        network->get_support(result->support);
+        return true;
+      } else {
+        return false;
+      }
+    } else {
+      *lambda_high = *lambda_high * 2;
+    }
+  }
+}
+
+// Decrease lambda until we find a lambda such that the EMD cost is larger
+// than the upper EMD bound. If we find a feasible solution during the process,
+// we return true. Otherwise we return false.
+bool decrease_lambda(const emd_flow_args& args, double current_lambda_high,
+    emd_flow_result* result, EMDFlowNetwork* network, double* lambda_low) {
+  if (args.verbose) {
+    snprintf(output_buffer, kOutputBufferSize,
+        "Finding small enough value of lambda ...\n");
+    args.output_function(output_buffer);
+  }
+
+  // TODO?
+  // Calculate the best approximation that satisfies only s-sparsity in
+  // each column. This allows us to end early in case the EMD bounds are
+  // larger than what we need for a perfect approximation.
+
+  *lambda_low = args.lambda_low;
+  while (true) {
+    network->run_flow(*lambda_low);
+    int cur_emd_cost = network->get_EMD_used();
+    double cur_amp_sum = network->get_supported_amplitude_sum();
+
+    if (args.verbose) {
+      snprintf(output_buffer, kOutputBufferSize, "l: %e  EMD: %d  amp sum: %e"
+          "\n", *lambda_low, cur_emd_cost, cur_amp_sum);
+      args.output_function(output_buffer);
+    }
+
+    if (cur_emd_cost > args.emd_bound_high) {
+      break;
+    } else {
+      if (cur_emd_cost >= args.emd_bound_low) {
+        result->final_lambda_low = *lambda_low;
+        result->final_lambda_high = current_lambda_high;
+        result->emd_cost = cur_emd_cost;
+        result->amp_sum = cur_amp_sum;
+        network->get_support(result->support);
+        return true;
+      }
+      *lambda_low = *lambda_low / 2;
+    }
+  }
+  return false;
+}

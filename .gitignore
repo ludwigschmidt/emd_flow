@@ -1,0 +1,8 @@
+obj
+emd_flow
+.deps
+*.swp
+*.swo
+*.swm
+*.swn
+emd_flow.mexa64
