@@ -22,6 +22,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     mexErrMsgTxt("At least three input argument required (amplitudes, sparsity,"
         " EMD budget.");
   }
+  // TODO: Also check that we don't get too many arguments.
   if (nlhs > 5) {
     mexErrMsgTxt("Too many output arguments.");
   }
