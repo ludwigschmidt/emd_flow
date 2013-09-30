@@ -105,7 +105,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
   args.output_function = output_function;
   args.verbose = verbose;
 
+  std::vector<std::vector<bool> > support;
   emd_flow_result result;
+  result.support = &support;
 
   emd_flow(args, &result);
 
