@@ -4,8 +4,8 @@
 
 CXX = g++
 MEX = mex
-CXXFLAGS = -Wall -Wextra -O2 -std=c++03 -ansi -fPIC
-MEXCXXFLAGS = -Wall -Wextra -O2 -std=c++03 -ansi
+CXXFLAGS = -Wall -Wextra -O2 -std=c++98 -ansi -fPIC
+MEXCXXFLAGS = -Wall -Wextra -O2 -std=c++98 -ansi
 
 SRCDIR = src
 DEPDIR = .deps
@@ -20,6 +20,7 @@ clean:
 	rm -rf $(DEPDIR)
 	rm -f emd_flow
 	rm -f emd_flow.mexa64
+	rm -f emd_flow.mexmaci64
 
 # emd_flow executable
 EMD_FLOW_OBJECTS = main.o emd_flow.o emd_flow_network_factory.o emd_flow_network_sap.o
