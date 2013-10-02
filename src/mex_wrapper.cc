@@ -35,8 +35,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     mexErrMsgTxt("Amplitudes need to be a two-dimensional double array.");
   }
 
-  int k = 0;
-  if (!get_double_as_int(prhs[1], &k)) {
+  int s = 0;
+  if (!get_double_as_int(prhs[1], &s)) {
     mexErrMsgTxt("Sparsity has to be a double scalar.");
   }
 
@@ -98,7 +98,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
   }
 
   emd_flow_args args(a);
-  args.k = k;
+  args.s = s;
   args.emd_bound_low = emd_bound_low;
   args.emd_bound_high = emd_bound_high;
   args.lambda_low = lambda_low;

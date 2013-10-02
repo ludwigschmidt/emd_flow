@@ -8,8 +8,8 @@
 struct emd_flow_args {
   // input amplitudes (will not be squared)
   const std::vector<std::vector<double> >& x;
-  // total sparsity
-  int k;
+  // sparsity per column
+  int s;
   // Bounds on the EMD budget. If we find a solution with EMD cost
   // between the lower bound and the upper bound we return it.
   int emd_bound_low;

@@ -39,8 +39,8 @@ void emd_flow(const emd_flow_args& args, emd_flow_result* result) {
   int c = args.x[0].size();
 
   if (args.verbose) {
-    snprintf(output_buffer, kOutputBufferSize, "r = %d,  c = %d,  k = %d,  "
-        "emd_bound_low = %d, emd_bound_high = %d\n", r, c, args.k,
+    snprintf(output_buffer, kOutputBufferSize, "r = %d,  c = %d,  s = %d,  "
+        "emd_bound_low = %d, emd_bound_high = %d\n", r, c, args.s,
         args.emd_bound_low, args.emd_bound_high);
     args.output_function(output_buffer);
     snprintf(output_buffer, kOutputBufferSize, "lambda_low = %e, "
@@ -55,7 +55,7 @@ void emd_flow(const emd_flow_args& args, emd_flow_result* result) {
   auto_ptr<EMDFlowNetwork> network =
       EMDFlowNetworkFactory::create_EMD_flow_network(args.x,
       args.outdegree_vertical_distance, args.alg_type);
-  network->set_sparsity(args.k);
+  network->set_sparsity(args.s);
 
   clock_t graph_construction_time = clock() - graph_construction_time_begin;
 

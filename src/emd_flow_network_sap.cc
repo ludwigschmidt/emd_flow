@@ -214,8 +214,8 @@ void EMDFlowNetworkSAP::compute_initial_potential() {
   }
 }
 
-void EMDFlowNetworkSAP::set_sparsity(int k) {
-  k_ = k;
+void EMDFlowNetworkSAP::set_sparsity(int s) {
+  sparsity_ = s;
 }
 
 void EMDFlowNetworkSAP::run_flow(double lambda) {
@@ -230,7 +230,7 @@ void EMDFlowNetworkSAP::run_flow(double lambda) {
   vector<double> dst(potential_.size(), numeric_limits<double>::infinity());
 
   // find a new flow
-  for (int total_flow = 0; total_flow < min(k_, r_); ++total_flow) {
+  for (int total_flow = 0; total_flow < min(sparsity_, r_); ++total_flow) {
     // Dijkstra
     fill(visited.begin(), visited.end(), false);
     fill(dst.begin(), dst.end(), numeric_limits<double>::infinity());

@@ -11,8 +11,8 @@ namespace po = boost::program_options;
 
 // rows, columns
 int r, c;
-// sparsity
-int k;
+// sparsity (per column)
+int s;
 // EMD bound
 int emd_bound;
 // amplitudes
@@ -45,7 +45,7 @@ int main(int argc, char** argv)
   int emd_bound_low = 0;
   int emd_bound_high = 0;
 
-  scanf("%d %d %d %d", &r, &c, &k, &emd_bound_low);
+  scanf("%d %d %d %d", &r, &c, &s, &emd_bound_low);
   if (vm.count("emd_interval")) {
     scanf("%d", &emd_bound_high);
   } else {
@@ -79,7 +79,7 @@ int main(int argc, char** argv)
   }
 
   emd_flow_args args(a);
-  args.k = k;
+  args.s = s;
   args.emd_bound_low = emd_bound_low;
   args.emd_bound_high = emd_bound_high;
   args.lambda_low = .5;

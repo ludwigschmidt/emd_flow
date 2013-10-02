@@ -10,7 +10,7 @@ class EMDFlowNetworkSAP : public EMDFlowNetwork {
  public:
   EMDFlowNetworkSAP(const std::vector<std::vector<double> >& amplitudes,
       int outdegree_vertical_distance);
-  void set_sparsity(int k);
+  void set_sparsity(int s);
   void run_flow(double lambda);
   int get_EMD_used();
   double get_supported_amplitude_sum();
@@ -43,8 +43,8 @@ class EMDFlowNetworkSAP : public EMDFlowNetwork {
 
   // amplitudes
   std::vector<std::vector<double> > a_;
-  // sparsity
-  int k_;
+  // sparsity per column
+  int sparsity_;
   // number of rows
   int r_;
   // number of columns

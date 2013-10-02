@@ -7,7 +7,8 @@
 class EMDFlowNetwork {
  public:
   EMDFlowNetwork() { }
-  virtual void set_sparsity(int k) = 0;
+  // sparsity per column
+  virtual void set_sparsity(int s) = 0;
   virtual void run_flow(double lambda) = 0;
   virtual int get_EMD_used() = 0;
   virtual double get_supported_amplitude_sum() = 0;
