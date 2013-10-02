@@ -13,7 +13,7 @@ OBJDIR = obj
 
 SRCS = main.cc emd_flow.cc emd_flow_network.cc emd_flow_network_sap.cc
 
-.PHONY: clean
+.PHONY: clean archive
 
 clean:
 	rm -rf $(OBJDIR)
@@ -21,6 +21,13 @@ clean:
 	rm -f emd_flow
 	rm -f emd_flow.mexa64
 	rm -f emd_flow.mexmaci64
+	rm -f emd-flow.tar.gz
+
+archive:
+	mkdir archive-tmp
+	tar --transform='s,^\.,emd-flow,' --exclude='.git' --exclude='archive-tmp' -czf archive-tmp/emd-flow.tar.gz .
+	mv archive-tmp/emd-flow.tar.gz .
+	rm -rf archive-tmp
 
 # emd_flow executable
 EMD_FLOW_OBJECTS = main.o emd_flow.o emd_flow_network_factory.o emd_flow_network_sap.o
