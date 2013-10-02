@@ -22,7 +22,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     mexErrMsgTxt("At least three input argument required (amplitudes, sparsity,"
         " EMD budget.");
   }
-  // TODO: Also check that we don't get too many arguments.
+  if (nrhs > 4) {
+    mexErrMsgTxt("Too many input arguments, at most four: amplitudes, sparsity,"
+        " EMD budget and the options struct.");
+  }
   if (nlhs > 5) {
     mexErrMsgTxt("Too many output arguments.");
   }
@@ -106,9 +109,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
   args.output_function = output_function;
   args.verbose = verbose;
 
-  std::vector<std::vector<bool> > support;
+  
   emd_flow_result result;
-  result.support = &support;
 
   emd_flow(args, &result);
 
