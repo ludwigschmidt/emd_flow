@@ -54,7 +54,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 
   // optional parameters
   bool verbose = false;
-  double lambda_low = 1.0;
+  double lambda_low = 0.5;
   double lambda_high = 1.0;
   int num_iter = 10;
   if (nrhs == 4) {
