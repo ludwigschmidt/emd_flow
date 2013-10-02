@@ -1,0 +1,140 @@
+This package contains functions for computing signal projections into the
+EMD-model (with variations). 
+
+================================================================================
+
+Table of contents:
+
+1. Installation
+2. Background
+3. Usage
+4. Contact
+5. License
+
+
+================================================================================
+
+1. Installation
+
+1.1 Matlab module
+
+Compile the mex file with
+
+  make mexfile
+
+which will produce a file emdflow.<mex-extension>, where <mex-extension> is the
+mex file name extension of your system.
+
+Currently the only dependency is mex, the Matlab module compiler, which needs to
+be installed on your system. Note that mex requires g++ on UNIX systems.
+
+The makefile assumes that mex is available on the command line as mex. If this
+is not the case on your system, you can override the path to the mex compiler:
+
+  make MEX='/path/to/mex' mexfile
+
+
+1.2 Command-line program
+
+The package also contains a command-line program for testing purposes. You can
+compile it with
+
+  make emd_flow
+
+Note that the emd_flow binary depends on the boost library (in particular, the
+program options library).
+
+
+================================================================================
+
+2. Background
+
+See "The Constrained Earth Mover Distance Model, with Applications to
+Compressive Sensing" (L. Schmidt, C. Hegde, P. Indyk):
+
+http://people.csail.mit.edu/indyk/main_sampta13.pdf
+
+
+================================================================================
+
+
+3. Usage
+
+3.1 Matlab module
+
+The name of the function is emd_flow. It requires at least three parameters:
+
+- X, a 2D-matrix containing the signal amplitudes.
+  Note that the algorithm works with the absolute values of X directly
+  without squaring the amplitudes first. So if you want to get an
+  l2-guarantee, pass X.^2 into emd_flow.
+
+- s, the per-column sparsity of the resulting projection.
+
+- B, the EMD budget. B can be either a single value or an interval [B_low,
+  B_high]. For a single value, emd_flow tries to find the best signal
+  using at most an EMD-budget B. For an interval, emd_flow tries to find a
+  signal approximation using at least B_low EMD-budget and at most B_high
+  EMD-budget. Specifying an interval instead of a single value can speed up
+  the convergence of the algorithm considerably.
+
+Moreover, emd_flow accepts an optional fourth parameter opts, which can
+specify a number of additional options:
+
+- opts.verbose, a boolean flag that indicates whether emd_flow shoud provide
+  verbose output. Default: false.
+
+- opts.lambda_low, the initial guess for the lower bound on the Lagrangian
+  relaxation parameter lambda. An incorrect guess will be corrected by the
+  algorithm. A good guess for lambda_low can speed up the convergence of the
+  algorithm considerably. A good source for a guess for lambda_low is a previous
+  run of lambda_low with similar parameters.
+
+- opts.lambda_high, the initial guess for the upper bound on the Lagrangian
+  relaxation parameter lambda. As with lambda_low, an incorrect guess will be
+  corrected by the algorithm and a good guess can speed up the convergence of
+  the algorithm considerably.
+
+- opts.num_iterations, the maximum number of iterations the algorithm performs
+  in the binary search over lambda. Note that the initial iterations for finding
+  correct values for lambda_low and lambda_high do not count towards this
+  number.
+
+
+After a successful run of emd_flow, the algorithm returns the following values:
+
+[support, emd_cost, amp_sum, final_lambda_low, final_lambda_high]
+
+- support is a 2D-matrix with the same dimensions as the input parameter X.
+  Each entry in support is either 0 or 1, indicating whether the corresponding
+  entry of X is part of the support or not.
+
+- emd_cost is the total EMD-cost of the support identified by emd_flow.
+
+- amp_sum is the sum of absolute values of the supported entries in X.
+
+- final_lambda_low is the lower bound on lambda in the last iteration of the
+  binary search. If you run emd_flow several times on similar inputs, consider
+  using this value as an initial guess for lambda_low in order to speed up
+  convergence.
+  
+- final_lambda_high is the lower bound on lambda in the last iteration of the
+  binary search. If you run emd_flow several times on similar inputs, consider
+  using this value as an initial guess for lambda_high in order to speed up
+  convergence.
+
+
+================================================================================
+
+4. Contact
+
+For questions, comments, etc. about this package, contact Ludwig Schmidt 
+(ludwigschmidt2@gmail.com).
+
+
+================================================================================
+
+5. License
+
+This package is licensed under the MIT license. See the file LICENSE for
+details.
