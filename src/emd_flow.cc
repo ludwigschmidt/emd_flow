@@ -49,6 +49,14 @@ void emd_flow(const emd_flow_args& args, emd_flow_result* result) {
     args.output_function(output_buffer);
   }
 
+  /*for (size_t ii = 0; ii < r; ++ii) {
+    for (size_t jj = 0; jj < c; ++jj) {
+      printf("%lf ", args.x[ii][jj]);
+    }
+    printf("\n");
+  }
+  printf("\n");*/
+
   // build graph
   clock_t graph_construction_time_begin = clock();
 

@@ -6,6 +6,7 @@ CXX = g++
 MEX = mex
 CXXFLAGS = -Wall -Wextra -O2 -std=c++98 -ansi -fPIC
 MEXCXXFLAGS = -Wall -Wextra -O2 -std=c++98 -ansi
+GTESTDIR = /usr/src/gtest
 
 SRCDIR = src
 DEPDIR = .deps
@@ -29,12 +30,24 @@ archive:
 	mv archive-tmp/emd_flow.tar.gz .
 	rm -rf archive-tmp
 
-# emd_flow executable
-EMD_FLOW_OBJECTS = main.o emd_flow.o emd_flow_network_factory.o emd_flow_network_sap.o
+EMD_FLOW_OBJS = emd_flow.o emd_flow_network_factory.o emd_flow_network_sap.o
 
-emd_flow: $(EMD_FLOW_OBJECTS:%=$(OBJDIR)/%)
+# emd_flow executable
+EMD_FLOW_BIN_OBJS = $(EMD_FLOW_OBJS) main.o
+emd_flow: $(EMD_FLOW_BIN_OBJS:%=$(OBJDIR)/%)
 	$(CXX) $(CXXFLAGS) -o $@ $^ -lboost_program_options
 
+# gtest
+$(OBJDIR)/gtest-all.o: $(GTESTDIR)/src/gtest-all.cc
+	$(CXX) $(CXXFLAGS) -I $(GTESTDIR) -c -o $@ $<
+
+# emd_flow tests
+EMD_FLOW_TEST_OBJS = $(EMD_FLOW_OBJS) emd_flow_test.o gtest-all.o
+emd_flow_test: $(EMD_FLOW_TEST_OBJS:%=$(OBJDIR)/%)
+	$(CXX) $(CXXFLAGS) -o $@ $^ -pthread
+
+run_emd_flow_test: emd_flow_test
+	./emd_flow_test
 
 # emd_flow MEX file
 MEXFILE_OBJECTS = emd_flow.o emd_flow_network_factory.o emd_flow_network_sap.o
