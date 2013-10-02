@@ -21,12 +21,12 @@ clean:
 	rm -f emd_flow
 	rm -f emd_flow.mexa64
 	rm -f emd_flow.mexmaci64
-	rm -f emd-flow.tar.gz
+	rm -f emd_flow.tar.gz
 
 archive:
 	mkdir archive-tmp
-	tar --transform='s,^\.,emd-flow,' --exclude='.git' --exclude='archive-tmp' -czf archive-tmp/emd-flow.tar.gz .
-	mv archive-tmp/emd-flow.tar.gz .
+	tar --transform='s,^\.,emd_flow,' --exclude='.git' --exclude='archive-tmp' -czf archive-tmp/emd_flow.tar.gz .
+	mv archive-tmp/emd_flow.tar.gz .
 	rm -rf archive-tmp
 
 # emd_flow executable
