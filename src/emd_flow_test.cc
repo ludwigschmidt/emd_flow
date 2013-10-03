@@ -209,6 +209,75 @@ TEST(EMDFlowTest, SimpleOneEMDOneSparsity4) {
   CheckResult(result, expected_support, 0, 10.0);
 }
 
+TEST(EMDFlowTest, SimpleOutdegreeNotLimiting) {
+  vector<vector<double> > x;
+  x.push_back(list_of(0.0)(0.0));
+  x.push_back(list_of(0.0)(1.0));
+  x.push_back(list_of(1.0)(0.0));
+  const int s = 1;
+  const int B = 1;
+  emd_flow_args args(x);
+  FillArgs(s, B, &args);
+  args.outdegree_vertical_distance = 1;
+
+  vector<vector<bool> > support;
+  emd_flow_result result;
+  result.support = &support;
+  emd_flow(args, &result); 
+
+  vector<vector<bool> > expected_support;
+  expected_support.push_back(list_of(0)(0));
+  expected_support.push_back(list_of(0)(1));
+  expected_support.push_back(list_of(1)(0));
+  CheckResult(result, expected_support, 1, 2.0);
+}
+
+TEST(EMDFlowTest, SimpleOutdegreeLimiting1) {
+  vector<vector<double> > x;
+  x.push_back(list_of(0.0)(1.0));
+  x.push_back(list_of(0.0)(0.0));
+  x.push_back(list_of(1.1)(0.1));
+  const int s = 1;
+  const int B = 2;
+  emd_flow_args args(x);
+  FillArgs(s, B, &args);
+  args.outdegree_vertical_distance = 1;
+
+  vector<vector<bool> > support;
+  emd_flow_result result;
+  result.support = &support;
+  emd_flow(args, &result); 
+
+  vector<vector<bool> > expected_support;
+  expected_support.push_back(list_of(0)(0));
+  expected_support.push_back(list_of(0)(0));
+  expected_support.push_back(list_of(1)(1));
+  CheckResult(result, expected_support, 0, 1.2);
+}
+
+TEST(EMDFlowTest, SimpleOutdegreeLimiting2) {
+  vector<vector<double> > x;
+  x.push_back(list_of(0.0)(1.0));
+  x.push_back(list_of(0.0)(0.2));
+  x.push_back(list_of(1.0)(0.1));
+  const int s = 1;
+  const int B = 2;
+  emd_flow_args args(x);
+  FillArgs(s, B, &args);
+  args.outdegree_vertical_distance = 1;
+
+  vector<vector<bool> > support;
+  emd_flow_result result;
+  result.support = &support;
+  emd_flow(args, &result); 
+
+  vector<vector<bool> > expected_support;
+  expected_support.push_back(list_of(0)(0));
+  expected_support.push_back(list_of(0)(1));
+  expected_support.push_back(list_of(1)(0));
+  CheckResult(result, expected_support, 1, 1.2);
+}
+
 int main(int argc, char **argv) {
   ::testing::InitGoogleTest(&argc, argv);                                       
   return RUN_ALL_TESTS();

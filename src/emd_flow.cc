@@ -204,16 +204,35 @@ bool decrease_lambda(const emd_flow_args& args, double current_lambda_high,
     args.output_function(output_buffer);
   }
 
-  // TODO?
   // Calculate the best approximation that satisfies only s-sparsity in
   // each column. This allows us to end early in case the EMD bounds are
   // larger than what we need for a perfect approximation.
+  *lambda_low = 0.0;
+  network->run_flow(*lambda_low);
+  int cur_emd_cost = network->get_EMD_used();
+  double cur_amp_sum = network->get_supported_amplitude_sum();
+  if (args.verbose) {
+    snprintf(output_buffer, kOutputBufferSize, "l: %e  EMD: %d  amp sum: %e"
+        "\n", *lambda_low, cur_emd_cost, cur_amp_sum);
+    args.output_function(output_buffer);
+  }
+
+  // In this case, the final EMD cost might be less than emd_bound_low.
+  // But we are running with lambda=0, so we cannot use more EMD.
+  if (cur_emd_cost < args.emd_bound_high) {
+    result->final_lambda_low = *lambda_low;
+    result->final_lambda_high = current_lambda_high;
+    result->emd_cost = cur_emd_cost;
+    result->amp_sum = cur_amp_sum;
+    network->get_support(result->support);
+    return true;
+  }
 
   *lambda_low = args.lambda_low;
   while (true) {
     network->run_flow(*lambda_low);
-    int cur_emd_cost = network->get_EMD_used();
-    double cur_amp_sum = network->get_supported_amplitude_sum();
+    cur_emd_cost = network->get_EMD_used();
+    cur_amp_sum = network->get_supported_amplitude_sum();
 
     if (args.verbose) {
       snprintf(output_buffer, kOutputBufferSize, "l: %e  EMD: %d  amp sum: %e"
