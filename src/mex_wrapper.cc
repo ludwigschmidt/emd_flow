@@ -57,6 +57,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
   double lambda_low = 0.5;
   double lambda_high = 1.0;
   int num_iter = 10;
+  int outdegree_vertical_distance = -1;
   vector<double> emd_costs;
   if (nrhs == 4) {
     set<string> known_options;
@@ -64,6 +65,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     known_options.insert("lambda_low");
     known_options.insert("lambda_high");
     known_options.insert("num_iterations");
+    known_options.insert("outdegree_vertical_distance");
     vector<string> options;
     if (!get_fields(prhs[3], &options)) {
       mexErrMsgTxt("Cannot get fields from options argument.");
@@ -96,6 +98,13 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
         && !get_double_field_as_int(prhs[3], "num_iterations", &num_iter)) {
       mexErrMsgTxt("num_iterations field has to be a double scalar.");
     }
+
+    if (has_field(prhs[3], "outdegree_vertical_distance")
+        && !get_double_field_as_int(prhs[3], "outdegree_vertical_distance",
+                                    &outdegree_vertical_distance)) {
+      mexErrMsgTxt("outdegree_vertical_distance field has to be a double "
+                   "scalar.");
+    }
   }
 
   emd_flow_args args(a);
@@ -105,7 +114,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
   args.lambda_low = lambda_low;
   args.lambda_high = lambda_high;
   args.num_search_iterations = num_iter;
-  args.outdegree_vertical_distance = -1;
+  args.outdegree_vertical_distance = outdegree_vertical_distance;
   args.emd_costs = emd_costs;
   args.alg_type = EMDFlowNetworkFactory::kShortestAugmentingPath;
   args.output_function = output_function;
