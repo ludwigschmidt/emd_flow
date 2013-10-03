@@ -23,7 +23,7 @@ bool get_double(const mxArray* raw_data, double* data) {
 bool get_double_as_int(const mxArray* raw_data, int* data) {
   double tmp;
   if (get_double(raw_data, &tmp)) {
-    *data = static_cast<double>(round(tmp) + 0.1);
+    *data = static_cast<double>(round(tmp));
     return true;
   } else {
     return false;
@@ -185,7 +185,7 @@ void set_double_matrix(mxArray** raw_data,
   int numdims = 2;
   mwSize dims[2];
   size_t r = data.size();
-  size_t c = data[0].size();
+  size_t c = (r > 0 ? data[0].size() : 0);
   dims[0] = r;
   dims[1] = c;
   *raw_data = mxCreateNumericArray(numdims, dims, mxDOUBLE_CLASS, mxREAL);
@@ -201,7 +201,7 @@ void set_double_matrix(mxArray** raw_data,
     const std::vector<std::vector<bool> >& data) {
   std::vector<std::vector<double> > tmp_data;
   size_t r = data.size();
-  size_t c = data[0].size();
+  size_t c = (r > 0 ? data[0].size() : 0);
   tmp_data.resize(r);
   for (size_t ir = 0; ir < r; ++ir) {
     tmp_data[ir].resize(c);
