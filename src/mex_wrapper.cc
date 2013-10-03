@@ -66,6 +66,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     known_options.insert("lambda_high");
     known_options.insert("num_iterations");
     known_options.insert("outdegree_vertical_distance");
+    known_options.insert("emd_costs");
     vector<string> options;
     if (!get_fields(prhs[3], &options)) {
       mexErrMsgTxt("Cannot get fields from options argument.");
@@ -104,6 +105,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
                                     &outdegree_vertical_distance)) {
       mexErrMsgTxt("outdegree_vertical_distance field has to be a double "
                    "scalar.");
+    }
+    if (has_field(prhs[3], "emd_costs")
+        && !get_double_row_vector_field(prhs[3], "emd_costs", &emd_costs)) {
+      mexErrMsgTxt("emd_costs field has to be a double row vector.");
     }
   }
 

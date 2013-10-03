@@ -140,6 +140,18 @@ bool get_double_field(const mxArray* struc, const char* name, double* data) {
   return get_double(raw_data, data);
 }
 
+bool get_double_row_vector_field(const mxArray* struc, const char* name,
+                                 std::vector<double>* data) {
+  if (!mxIsStruct(struc)) {
+    return false;
+  }
+  mxArray* raw_data = mxGetField(struc, 0, name);
+  if (raw_data == NULL) {
+    return false;
+  }
+  return get_double_row_vector(raw_data, data);
+}
+
 bool get_double_field_as_int(const mxArray* struc, const char* name,
     int* data) {
   if (!mxIsStruct(struc)) {
