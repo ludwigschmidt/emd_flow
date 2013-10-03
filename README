@@ -45,6 +45,25 @@ Note that the emd_flow binary depends on the boost library (in particular, the
 program options library).
 
 
+1.3 Unit tests
+
+You can build and execute the unit tests for the main emd_flow routine with
+
+  make run_emd_flow_test
+
+The unit tests are mainly for development purposes. In order to run the unit
+tests, you need the boost library (headers only is sufficient) and the Google
+C++ test framework googletest, which you can get from:
+
+  http://code.google.com/p/googletest/
+
+On Ubuntu / Debian, you can install googletest via the libgtest-dev package.
+In that case, the makefile should find you googletest installation. Otherwise,
+you can specify the path to your local googletest installation with
+
+  make GTESTDIR='/path/to/googletest' run_emd_flow_test
+
+
 ================================================================================
 
 2. Background
