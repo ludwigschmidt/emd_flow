@@ -132,7 +132,7 @@ void EMDFlowNetworkSAP::print_full_graph() {
   }
 }
 
-void EMDFlowNetworkSAP::apply_lambda(double lambda) {
+void EMDFlowNetworkSAP::apply_EMD_lambda(double lambda) {
   for (int row = 0; row < r_; ++row) {
     for (int col = 0; col < c_ - 1; ++col) {
       size_t ndest = num_destinations(row);
@@ -143,6 +143,16 @@ void EMDFlowNetworkSAP::apply_lambda(double lambda) {
         e_[e_[cur].opposite].cost =
             -lambda * emd_costs_[abs(row - (first_dest + idest))];
       }
+    }
+  }
+}
+
+void EMDFlowNetworkSAP::apply_signal_lambda(double lambda) {
+  for (int row = 0; row < r_; ++row) {
+    for (int col = 0; col < c_; ++col) {
+      EdgeIndex cur = node_edges_[row][col];
+      e_[cur].cost = lambda * -abs(a_[row][col]);
+      e_[e_[cur].opposite].cost = lambda * abs(a_[row][col]);
     }
   }
 }
@@ -194,7 +204,7 @@ void EMDFlowNetworkSAP::compute_initial_potential() {
   potential_[s_] = 0.0;
   for (int ii = 0; ii < r_; ++ii) {
     potential_[innode_index(ii, 0)] = 0.0;
-    potential_[outnode_index(ii, 0)] = -abs(a_[ii][0]);
+    potential_[outnode_index(ii, 0)] = e_[node_edges_[ii][0]].cost;
   }
 
   // iteratively update next layer based on current layer
@@ -213,7 +223,8 @@ void EMDFlowNetworkSAP::compute_initial_potential() {
     // innode to outnode
     for (int row = 0; row < r_; ++row) {
       potential_[outnode_index(row, col + 1)] =
-          potential_[innode_index(row, col + 1)] - abs(a_[row][col + 1]);
+          potential_[innode_index(row, col + 1)]
+          + e_[node_edges_[row][col + 1]].cost;
     }
   }
 
@@ -227,11 +238,12 @@ void EMDFlowNetworkSAP::set_sparsity(int s) {
   sparsity_ = s;
 }
 
-void EMDFlowNetworkSAP::run_flow(double lambda) {
+void EMDFlowNetworkSAP::run_flow(double EMD_lambda, double signal_lambda) {
   typedef pair<double, EMDFlowNetworkSAP::NodeIndex> q_elem;
 
   reset_flow();
-  apply_lambda(lambda);
+  apply_EMD_lambda(EMD_lambda);
+  apply_signal_lambda(signal_lambda);
 
   //print_full_graph();
 

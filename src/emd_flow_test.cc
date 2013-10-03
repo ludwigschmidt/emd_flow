@@ -32,6 +32,14 @@ void CheckResultConsistency(const emd_flow_result&) {
   // TODO:implement
 }
 
+void CheckResultIsEmpty(const emd_flow_result& result) {
+  EXPECT_EQ(0, result.emd_cost);
+  EXPECT_DOUBLE_EQ(0.0, result.amp_sum);
+  EXPECT_DOUBLE_EQ(0.0, result.final_lambda_low);
+  EXPECT_DOUBLE_EQ(0.0, result.final_lambda_high);
+  EXPECT_EQ(0, result.support->size());
+}
+
 void CheckResult(const emd_flow_result& result,
                  int expected_EMD,
                  double expected_amplitude_sum) {
@@ -323,6 +331,26 @@ TEST(EMDFlowTest, SimpleInvertedEMDCosts) {
   expected_support.push_back(list_of(1)(0));
   CheckResult(result, expected_support, 0, 13.0);
 }
+
+TEST(EMDFlowTest, SimpleImpossibleEMDCosts) {
+  vector<vector<double> > x;
+  x.push_back(list_of(0.0)(3.0));
+  x.push_back(list_of(0.0)(2.0));
+  x.push_back(list_of(1.0)(1.0));
+  const int s = 1;
+  const int B = 0;
+  emd_flow_args args(x);
+  FillArgs(s, B, &args);
+  args.emd_costs = list_of(1.0)(1.0)(1.0);
+
+  vector<vector<bool> > support;
+  emd_flow_result result;
+  result.support = &support;
+  emd_flow(args, &result); 
+
+  CheckResultIsEmpty(result);
+}
+
 
 int main(int argc, char **argv) {
   ::testing::InitGoogleTest(&argc, argv);                                       

@@ -14,7 +14,7 @@ class EMDFlowNetworkSAP : public EMDFlowNetwork {
       int outdegree_vertical_distance,
       const std::vector<double>& emd_costs);
   void set_sparsity(int s);
-  void run_flow(double lambda);
+  void run_flow(double EMD_lambda, double signal_lambda);
   int get_EMD_used();
   double get_supported_amplitude_sum();
   void get_support(std::vector<std::vector<bool> >* support);
@@ -93,7 +93,8 @@ class EMDFlowNetworkSAP : public EMDFlowNetwork {
     return std::max(0, r - outdegree_vertical_distance_);
   }
 
-  void apply_lambda(double lambda);
+  void apply_EMD_lambda(double lambda);
+  void apply_signal_lambda(double lambda);
   void reset_flow();
   void compute_initial_potential();
   void print_full_graph();

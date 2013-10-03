@@ -9,7 +9,7 @@ class EMDFlowNetwork {
   EMDFlowNetwork() { }
   // sparsity per column
   virtual void set_sparsity(int s) = 0;
-  virtual void run_flow(double lambda) = 0;
+  virtual void run_flow(double EMD_lambda, double signal_lambda) = 0;
   virtual int get_EMD_used() = 0;
   virtual double get_supported_amplitude_sum() = 0;
   virtual void get_support(std::vector<std::vector<bool> >* support) = 0;

@@ -83,7 +83,7 @@ void emd_flow(const emd_flow_args& args, emd_flow_result* result) {
   } else if (static_cast<int>(emd_costs.size())
       != outdegree_vertical_distance + 1) {
     snprintf(output_buffer, kOutputBufferSize, "Error: "
-        "the emd_costs vector has an incorrect number of entries: %d entries, "
+        "the emd_costs vector has an incorrect number of entries: %lu entries, "
         " should be %d\n", emd_costs.size(), outdegree_vertical_distance + 1);
     args.output_function(output_buffer);
     clear_result(result);
@@ -157,7 +157,7 @@ void binary_search_lambda(const emd_flow_args& args, double lambda_low,
       || cur_emd_cost > args.emd_bound_high)) {
     ++current_iteration;
     double cur_lambda = (lambda_high + lambda_low) / 2;
-    network->run_flow(cur_lambda);
+    network->run_flow(cur_lambda, 1.0);
     cur_emd_cost = network->get_EMD_used();
     cur_amp_sum = network->get_supported_amplitude_sum();
 
@@ -177,7 +177,7 @@ void binary_search_lambda(const emd_flow_args& args, double lambda_low,
 
   // TODO: don't rerun flow here?
   // run with final lambda
-  network->run_flow(lambda_high);
+  network->run_flow(lambda_high, 1.0);
   result->final_lambda_low = lambda_low;
   result->final_lambda_high = lambda_high;
   result->emd_cost = network->get_EMD_used();
@@ -195,10 +195,33 @@ bool increase_lambda(const emd_flow_args& args, emd_flow_result* result,
         "Finding large enough value of lambda ...\n");
     args.output_function(output_buffer);
   }
+
+  // Check what the cheapest flow is (ignoring node costs). If even the
+  // cheapest flow costs more than the upper EMD bound, we cannot satisfy it.
+  network->run_flow(1.0, 0.0);
+  int cur_emd_cost = network->get_EMD_used();
+  double cur_amp_sum = network->get_supported_amplitude_sum();
+
+  if (args.verbose) {
+    snprintf(output_buffer, kOutputBufferSize, "l_EMD: 1.0  l_signal: 0.0  "
+        "EMD: %d  amp sum: %e\n", cur_emd_cost, cur_amp_sum);
+    args.output_function(output_buffer);
+  }
+
+  if (cur_emd_cost > args.emd_bound_high) {
+    snprintf(output_buffer, kOutputBufferSize, "Cannot satisfy the upper EMD "
+        "bound regardless of the signal approximation: the smallest feasible "
+        "EMD cost is %d while the upper EMD bound is %d. Consider changing the "
+        "EMD bounds or the edge EMD costs.", cur_emd_cost, args.emd_bound_high);
+    args.output_function(output_buffer);
+    clear_result(result);
+    return true;
+  }
+
   while (true) {
-    network->run_flow(*lambda_high);
-    int cur_emd_cost = network->get_EMD_used();
-    double cur_amp_sum = network->get_supported_amplitude_sum();
+    network->run_flow(*lambda_high, 1.0);
+    cur_emd_cost = network->get_EMD_used();
+    cur_amp_sum = network->get_supported_amplitude_sum();
 
     if (args.verbose) {
       snprintf(output_buffer, kOutputBufferSize, "l: %e  EMD: %d  amp sum: %e"
@@ -238,7 +261,7 @@ bool decrease_lambda(const emd_flow_args& args, double current_lambda_high,
   // each column. This allows us to end early in case the EMD bounds are
   // larger than what we need for a perfect approximation.
   *lambda_low = 0.0;
-  network->run_flow(*lambda_low);
+  network->run_flow(*lambda_low, 1.0);
   int cur_emd_cost = network->get_EMD_used();
   double cur_amp_sum = network->get_supported_amplitude_sum();
   if (args.verbose) {
@@ -250,6 +273,13 @@ bool decrease_lambda(const emd_flow_args& args, double current_lambda_high,
   // In this case, the final EMD cost might be less than emd_bound_low.
   // But we are running with lambda=0, so we cannot use more EMD.
   if (cur_emd_cost < args.emd_bound_high) {
+    if (args.emd_bound_low < args.emd_bound_high
+        && cur_emd_cost < args.emd_bound_low) {
+      snprintf(output_buffer, kOutputBufferSize, "Found a solution with lambda "
+          "= 0, so the solution does not satisfy the lower EMD bound.");
+      args.output_function(output_buffer);
+    }
+
     result->final_lambda_low = *lambda_low;
     result->final_lambda_high = current_lambda_high;
     result->emd_cost = cur_emd_cost;
@@ -260,7 +290,7 @@ bool decrease_lambda(const emd_flow_args& args, double current_lambda_high,
 
   *lambda_low = args.lambda_low;
   while (true) {
-    network->run_flow(*lambda_low);
+    network->run_flow(*lambda_low, 1.0);
     cur_emd_cost = network->get_EMD_used();
     cur_amp_sum = network->get_supported_amplitude_sum();
 
