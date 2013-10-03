@@ -19,6 +19,7 @@ class EMDFlowNetworkFactory {
   static std::auto_ptr<EMDFlowNetwork> create_EMD_flow_network(
       const std::vector<std::vector<double> >& amplitudes,
       int outdegree_vertical_distance,
+      const std::vector<double>& emd_costs,
       EMDFlowNetworkType type);
 
   static EMDFlowNetworkType parse_type(const std::string& name);

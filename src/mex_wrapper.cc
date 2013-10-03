@@ -57,6 +57,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
   double lambda_low = 0.5;
   double lambda_high = 1.0;
   int num_iter = 10;
+  vector<double> emd_costs;
   if (nrhs == 4) {
     set<string> known_options;
     known_options.insert("verbose");
@@ -105,6 +106,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
   args.lambda_high = lambda_high;
   args.num_search_iterations = num_iter;
   args.outdegree_vertical_distance = -1;
+  args.emd_costs = emd_costs;
   args.alg_type = EMDFlowNetworkFactory::kShortestAugmentingPath;
   args.output_function = output_function;
   args.verbose = verbose;

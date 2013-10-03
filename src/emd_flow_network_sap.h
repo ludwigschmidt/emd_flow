@@ -9,8 +9,10 @@
 
 class EMDFlowNetworkSAP : public EMDFlowNetwork {
  public:
-  EMDFlowNetworkSAP(const std::vector<std::vector<double> >& amplitudes,
-      int outdegree_vertical_distance);
+  EMDFlowNetworkSAP(
+      const std::vector<std::vector<double> >& amplitudes,
+      int outdegree_vertical_distance,
+      const std::vector<double>& emd_costs);
   void set_sparsity(int s);
   void run_flow(double lambda);
   int get_EMD_used();
@@ -52,6 +54,8 @@ class EMDFlowNetworkSAP : public EMDFlowNetwork {
   int c_;
   // maximum vertical distance covered by an edge between neighboring columns
   int outdegree_vertical_distance_;
+  // emd costs for an edge between columns with vertical distance i.
+  std::vector<double> emd_costs_;
 
   // source, sink
   NodeIndex s_, t_;

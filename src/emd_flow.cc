@@ -30,6 +30,9 @@ bool decrease_lambda(const emd_flow_args& args, double current_lambda_high,
 void binary_search_lambda(const emd_flow_args& args, double lambda_low,
     double lambda_high, emd_flow_result* result, EMDFlowNetwork* network);
 
+// Set the result struct to values indicating an error.
+void clear_result(emd_flow_result* result);
+
 
 // Main routine for computing the EMD flow.
 void emd_flow(const emd_flow_args& args, emd_flow_result* result) {
@@ -60,9 +63,34 @@ void emd_flow(const emd_flow_args& args, emd_flow_result* result) {
   // build graph
   clock_t graph_construction_time_begin = clock();
 
+  int outdegree_vertical_distance = args.outdegree_vertical_distance;
+  if (outdegree_vertical_distance == -1) {
+    outdegree_vertical_distance = r;
+  } else if (outdegree_vertical_distance < -1) {
+    snprintf(output_buffer, kOutputBufferSize, "Error: "
+        "outdegree_vertical_distance cannot be less than -1.");
+    args.output_function(output_buffer);
+    clear_result(result);
+    return;
+  }
+
+  vector<double> emd_costs = args.emd_costs;
+  if (emd_costs.size() == 0) {
+    for (int ii = 0; ii <= outdegree_vertical_distance; ++ii) {
+      emd_costs.push_back(ii);
+    }
+  } else if (static_cast<int>(emd_costs.size())
+      != outdegree_vertical_distance + 1) {
+    snprintf(output_buffer, kOutputBufferSize, "Error: "
+        "the emd_costs vector has an incorrect number of entries.");
+    args.output_function(output_buffer);
+    clear_result(result);
+    return;
+  }
+
   auto_ptr<EMDFlowNetwork> network =
       EMDFlowNetworkFactory::create_EMD_flow_network(args.x,
-      args.outdegree_vertical_distance, args.alg_type);
+      outdegree_vertical_distance, emd_costs, args.alg_type);
   network->set_sparsity(args.s);
 
   clock_t graph_construction_time = clock() - graph_construction_time_begin;
@@ -255,4 +283,12 @@ bool decrease_lambda(const emd_flow_args& args, double current_lambda_high,
     }
   }
   return false;
+}
+
+void clear_result(emd_flow_result* result) {
+  result->support->clear();
+  result->emd_cost = 0;
+  result->amp_sum = 0;
+  result->final_lambda_low = 0;
+  result->final_lambda_high = 0;
 }

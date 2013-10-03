@@ -23,6 +23,13 @@ struct emd_flow_args {
   // Maximum vertical distance covered by edges from one columns to the next.
   // -1 indicates that we should build a full graph.
   int outdegree_vertical_distance;
+  // Cost of the edges from one column to the next.
+  // The vector should have outdegree_vertical_distance + 1 (or num_rows, if
+  // outdegree_vertical_distance is -1) entries. Entry i (starting at 0) should
+  // contain the cost of an edge with vertical distance i from one column to
+  // the next. Setting the vector to [0, 1, 2, 3, ..., ] gives the standard EMD.
+  // Passing an empty vector defaults to the EMD.
+  std::vector<double> emd_costs;
   // The internal flow algorithm to use
   EMDFlowNetworkFactory::EMDFlowNetworkType alg_type;
   // The output function

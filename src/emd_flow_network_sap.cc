@@ -11,18 +11,16 @@ using namespace std;
 
 EMDFlowNetworkSAP::EMDFlowNetworkSAP(
     const std::vector<std::vector<double> >& amplitudes,
-    int outdegree_vertical_distance) : a_(amplitudes),
-    outdegree_vertical_distance_(outdegree_vertical_distance),
-    total_inner_iterations(0), checking_inner_iterations(0),
-    updating_inner_iterations(0) {
+    int outdegree_vertical_distance,
+    const vector<double>& emd_costs)
+      : a_(amplitudes),
+        outdegree_vertical_distance_(outdegree_vertical_distance),
+        emd_costs_(emd_costs),
+        total_inner_iterations(0),
+        checking_inner_iterations(0),
+        updating_inner_iterations(0) {
   r_ = amplitudes.size();
   c_ = amplitudes[0].size();
-
-  // Set to maximum value if -1, which indicates we should not restrict the
-  // outdegree.
-  if (outdegree_vertical_distance_ == -1) {
-    outdegree_vertical_distance_ = r_;
-  }
 
   a_.resize(r_);
   for (int row = 0; row < r_; ++row) {
