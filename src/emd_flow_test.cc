@@ -35,8 +35,8 @@ void CheckResultConsistency(const emd_flow_result&) {
 void CheckResult(const emd_flow_result& result,
                  int expected_EMD,
                  double expected_amplitude_sum) {
-  EXPECT_EQ(result.emd_cost, expected_EMD);
-  EXPECT_DOUBLE_EQ(result.amp_sum, expected_amplitude_sum);
+  EXPECT_EQ(expected_EMD, result.emd_cost);
+  EXPECT_DOUBLE_EQ(expected_amplitude_sum, result.amp_sum);
   EXPECT_LT(result.final_lambda_low, result.final_lambda_high);
 }
 
@@ -44,11 +44,11 @@ void CheckResult(const emd_flow_result& result,
                  const vector<vector<bool > > expected_support,
                  int expected_EMD,
                  double expected_amplitude_sum) {
-  ASSERT_EQ(result.support->size(), expected_support.size());
+  ASSERT_EQ(expected_support.size(), result.support->size());
   for (size_t ii = 0; ii < expected_support.size(); ++ii) {
-    ASSERT_EQ((*result.support)[ii].size(), expected_support[ii].size());
+    ASSERT_EQ(expected_support[ii].size(), (*result.support)[ii].size());
     for (size_t jj = 0; jj < expected_support[ii].size(); ++jj) {
-      EXPECT_EQ((*result.support)[ii][jj], expected_support[ii][jj])
+      EXPECT_EQ(expected_support[ii][jj], (*result.support)[ii][jj])
           << "support mismatch at (" << ii << ", " << jj << ")";
     }
   }
@@ -276,6 +276,52 @@ TEST(EMDFlowTest, SimpleOutdegreeLimiting2) {
   expected_support.push_back(list_of(0)(1));
   expected_support.push_back(list_of(1)(0));
   CheckResult(result, expected_support, 1, 1.2);
+}
+
+TEST(EMDFlowTest, SimpleUniformEMDCosts) {
+  vector<vector<double> > x;
+  x.push_back(list_of(0.0)(3.0));
+  x.push_back(list_of(0.0)(2.0));
+  x.push_back(list_of(1.0)(1.0));
+  const int s = 1;
+  const int B = 1;
+  emd_flow_args args(x);
+  FillArgs(s, B, &args);
+  args.emd_costs = list_of(1.0)(1.0)(1.0);
+
+  vector<vector<bool> > support;
+  emd_flow_result result;
+  result.support = &support;
+  emd_flow(args, &result); 
+
+  vector<vector<bool> > expected_support;
+  expected_support.push_back(list_of(0)(1));
+  expected_support.push_back(list_of(0)(0));
+  expected_support.push_back(list_of(1)(0));
+  CheckResult(result, expected_support, 1, 4.0);
+}
+
+TEST(EMDFlowTest, SimpleInvertedEMDCosts) {
+  vector<vector<double> > x;
+  x.push_back(list_of(0.0)(3.0));
+  x.push_back(list_of(0.0)(5.0));
+  x.push_back(list_of(10.0)(7.0));
+  const int s = 1;
+  const int B = 0;
+  emd_flow_args args(x);
+  FillArgs(s, B, &args);
+  args.emd_costs = list_of(2.0)(1.0)(0.0);
+
+  vector<vector<bool> > support;
+  emd_flow_result result;
+  result.support = &support;
+  emd_flow(args, &result); 
+
+  vector<vector<bool> > expected_support;
+  expected_support.push_back(list_of(0)(1));
+  expected_support.push_back(list_of(0)(0));
+  expected_support.push_back(list_of(1)(0));
+  CheckResult(result, expected_support, 0, 13.0);
 }
 
 int main(int argc, char **argv) {

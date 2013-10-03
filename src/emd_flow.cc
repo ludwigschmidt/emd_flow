@@ -65,10 +65,10 @@ void emd_flow(const emd_flow_args& args, emd_flow_result* result) {
 
   int outdegree_vertical_distance = args.outdegree_vertical_distance;
   if (outdegree_vertical_distance == -1) {
-    outdegree_vertical_distance = r;
+    outdegree_vertical_distance = r - 1;
   } else if (outdegree_vertical_distance < -1) {
     snprintf(output_buffer, kOutputBufferSize, "Error: "
-        "outdegree_vertical_distance cannot be less than -1.");
+        "outdegree_vertical_distance cannot be less than -1.\n");
     args.output_function(output_buffer);
     clear_result(result);
     return;
@@ -82,7 +82,7 @@ void emd_flow(const emd_flow_args& args, emd_flow_result* result) {
   } else if (static_cast<int>(emd_costs.size())
       != outdegree_vertical_distance + 1) {
     snprintf(output_buffer, kOutputBufferSize, "Error: "
-        "the emd_costs vector has an incorrect number of entries.");
+        "the emd_costs vector has an incorrect number of entries.\n");
     args.output_function(output_buffer);
     clear_result(result);
     return;

@@ -137,7 +137,7 @@ void EMDFlowNetworkSAP::apply_lambda(double lambda) {
     for (int col = 0; col < c_ - 1; ++col) {
       size_t ndest = num_destinations(row);
       int first_dest = first_destination(row);
-      for (size_t idest = 0; idest < ndest; ++idest) {
+      for (int idest = 0; idest < static_cast<int>(ndest); ++idest) {
         EdgeIndex cur = emd_edges_[row][col][idest];
         e_[cur].cost = lambda * emd_costs_[abs(row - (first_dest + idest))];
         e_[e_[cur].opposite].cost =
@@ -232,6 +232,9 @@ void EMDFlowNetworkSAP::run_flow(double lambda) {
 
   reset_flow();
   apply_lambda(lambda);
+
+  //print_full_graph();
+
   compute_initial_potential();
 
   vector<EdgeIndex> edge_taken_to(potential_.size(), 0);
@@ -315,7 +318,7 @@ int EMDFlowNetworkSAP::get_EMD_used() {
     for (int col = 0; col < c_ - 1; ++col) {
       size_t ndest = num_destinations(row);
       int first_dest = first_destination(row);
-      for (size_t idest = 0; idest < ndest; ++idest) {
+      for (int idest = 0; idest < static_cast<int>(ndest); ++idest) {
         if (e_[emd_edges_[row][col][idest]].capacity == 0) {
           emd_cost += emd_costs_[abs(row - (first_dest + idest))];
         }
@@ -326,6 +329,8 @@ int EMDFlowNetworkSAP::get_EMD_used() {
 }
 
 double EMDFlowNetworkSAP::get_supported_amplitude_sum() {
+  //print_full_graph();
+
   double amp_sum = 0;
   for (int row = 0; row < r_; ++row) {
     for (int col = 0; col < c_; ++col) {
