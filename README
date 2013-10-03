@@ -88,17 +88,32 @@ specify a number of additional options:
   relaxation parameter lambda. An incorrect guess will be corrected by the
   algorithm. A good guess for lambda_low can speed up the convergence of the
   algorithm considerably. A good source for a guess for lambda_low is a previous
-  run of lambda_low with similar parameters.
+  run of lambda_low with similar parameters. Default: 0.5.
 
 - opts.lambda_high, the initial guess for the upper bound on the Lagrangian
   relaxation parameter lambda. As with lambda_low, an incorrect guess will be
   corrected by the algorithm and a good guess can speed up the convergence of
-  the algorithm considerably.
+  the algorithm considerably. Default: 1.0.
 
 - opts.num_iterations, the maximum number of iterations the algorithm performs
   in the binary search over lambda. Note that the initial iterations for finding
   correct values for lambda_low and lambda_high do not count towards this
-  number.
+  number. Default: 10.
+
+- opts.outdegree_vertical_distance, the maximum vertical distance for edges
+  between columns. This restricts the maximum outdegree of each node to
+  2 * opts.outdegree_vertical_distance + 1. If the value is set to -1, the
+  outdegree of the nodes is not limited (each node is fully connected to the
+  next layer). Default: -1.
+
+- opts.emd_costs, the EMD costs of the edges between columns. Has to be a
+  row vector with opts.outdegree_vertical_distance + 1 entries, unless
+  opts.outdegree_vertical_distance is -1, in which case the vector needs to
+  have num_rows - 1 entries.
+  Entry i in the vector gives the cost of an edge between columns with
+  vertical distance i-1.
+  The vector can also be empty, in which case the standard EMD weights are
+  used ([0, 1, 2, 3, ...]). Default: [] (empty).
 
 
 After a successful run of emd_flow, the algorithm returns the following values:
