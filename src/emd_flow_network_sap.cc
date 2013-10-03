@@ -139,8 +139,9 @@ void EMDFlowNetworkSAP::apply_lambda(double lambda) {
       int first_dest = first_destination(row);
       for (size_t idest = 0; idest < ndest; ++idest) {
         EdgeIndex cur = emd_edges_[row][col][idest];
-        e_[cur].cost = lambda * abs(row - (first_dest + idest));
-        e_[e_[cur].opposite].cost = -lambda * abs(row - (first_dest + idest));
+        e_[cur].cost = lambda * emd_costs_[abs(row - (first_dest + idest))];
+        e_[e_[cur].opposite].cost =
+            -lambda * emd_costs_[abs(row - (first_dest + idest))];
       }
     }
   }
@@ -316,7 +317,7 @@ int EMDFlowNetworkSAP::get_EMD_used() {
       int first_dest = first_destination(row);
       for (size_t idest = 0; idest < ndest; ++idest) {
         if (e_[emd_edges_[row][col][idest]].capacity == 0) {
-          emd_cost += abs(row - (first_dest + idest));
+          emd_cost += emd_costs_[abs(row - (first_dest + idest))];
         }
       }
     }
