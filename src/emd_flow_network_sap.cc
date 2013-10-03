@@ -18,6 +18,12 @@ EMDFlowNetworkSAP::EMDFlowNetworkSAP(
   r_ = amplitudes.size();
   c_ = amplitudes[0].size();
 
+  // Set to maximum value if -1, which indicates we should not restrict the
+  // outdegree.
+  if (outdegree_vertical_distance_ == -1) {
+    outdegree_vertical_distance_ = r_;
+  }
+
   a_.resize(r_);
   for (int row = 0; row < r_; ++row) {
     a_[row].resize(c_);
@@ -25,8 +31,6 @@ EMDFlowNetworkSAP::EMDFlowNetworkSAP(
       a_[row][col] = amplitudes[row][col];
     }
   }
-
-  // TODO: actually respect outdegree_vertical_distance
 
   // source and sink
   s_ = 0;
@@ -82,16 +86,19 @@ EMDFlowNetworkSAP::EMDFlowNetworkSAP(
   for (int row = 0; row < r_; ++row) {
     emd_edges_[row].resize(c_ - 1);
     for (int col = 0; col < c_ - 1; ++col) {
-      emd_edges_[row][col].resize(r_);
-      for (int dest = 0; dest < r_; ++dest) {
+      size_t ndest = num_destinations(row);
+      int first_dest = first_destination(row);
+      emd_edges_[row][col].resize(ndest);
+      for (size_t idest = 0; idest < ndest; ++idest) {
         EdgeIndex next_edge_index = e_.size();
-        Edge forward(innode_index(dest, col + 1), 1, 0.0, next_edge_index + 1);
+        Edge forward(innode_index(first_dest + idest, col + 1), 1, 0.0,
+            next_edge_index + 1);
         Edge backward(outnode_index(row, col), 0, 0.0, next_edge_index);
         e_.push_back(forward);
         e_.push_back(backward);
-        emd_edges_[row][col][dest] = next_edge_index;
+        emd_edges_[row][col][idest] = next_edge_index;
         outgoing_edges_[outnode_index(row, col)].push_back(next_edge_index);
-        outgoing_edges_[innode_index(dest, col + 1)].push_back(
+        outgoing_edges_[innode_index(first_dest + idest, col + 1)].push_back(
             next_edge_index + 1);
       }
     }
@@ -130,10 +137,12 @@ void EMDFlowNetworkSAP::print_full_graph() {
 void EMDFlowNetworkSAP::apply_lambda(double lambda) {
   for (int row = 0; row < r_; ++row) {
     for (int col = 0; col < c_ - 1; ++col) {
-      for (int dest = 0; dest < r_; ++dest) {
-        EdgeIndex cur = emd_edges_[row][col][dest];
-        e_[cur].cost = lambda * abs(row - dest);
-        e_[e_[cur].opposite].cost = -lambda * abs(row - dest);
+      size_t ndest = num_destinations(row);
+      int first_dest = first_destination(row);
+      for (size_t idest = 0; idest < ndest; ++idest) {
+        EdgeIndex cur = emd_edges_[row][col][idest];
+        e_[cur].cost = lambda * abs(row - (first_dest + idest));
+        e_[e_[cur].opposite].cost = -lambda * abs(row - (first_dest + idest));
       }
     }
   }
@@ -166,8 +175,9 @@ void EMDFlowNetworkSAP::reset_flow() {
   // edges between columns
   for (int row = 0; row < r_; ++row) {
     for (int col = 0; col < c_ - 1; ++col) {
-      for (int dest = 0; dest < r_; ++dest) {
-        EdgeIndex cur = emd_edges_[row][col][dest];
+      size_t ndest = num_destinations(row);
+      for (size_t idest = 0; idest < ndest; ++idest) {
+        EdgeIndex cur = emd_edges_[row][col][idest];
         e_[cur].capacity = 1;
         e_[e_[cur].opposite].capacity = 0;
       }
@@ -304,9 +314,11 @@ int EMDFlowNetworkSAP::get_EMD_used() {
   int emd_cost = 0;
   for (int row = 0; row < r_; ++row) {
     for (int col = 0; col < c_ - 1; ++col) {
-      for (int dest = 0; dest < r_; ++dest) {
-        if (e_[emd_edges_[row][col][dest]].capacity == 0) {
-          emd_cost += abs(row - dest);
+      size_t ndest = num_destinations(row);
+      int first_dest = first_destination(row);
+      for (size_t idest = 0; idest < ndest; ++idest) {
+        if (e_[emd_edges_[row][col][idest]].capacity == 0) {
+          emd_cost += abs(row - (first_dest + idest));
         }
       }
     }

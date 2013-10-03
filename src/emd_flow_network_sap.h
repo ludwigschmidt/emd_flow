@@ -3,6 +3,7 @@
 
 #include "emd_flow_network.h"
 
+#include <algorithm>
 #include <vector>
 #include <cstddef>
 
@@ -77,6 +78,15 @@ class EMDFlowNetworkSAP : public EMDFlowNetwork {
 
   NodeIndex outnode_index(int r, int c) {
     return innode_index(r, c) + 1;
+  }
+
+  size_t num_destinations(int r) {
+    return 1 + std::min(outdegree_vertical_distance_, r)
+             + std::min(outdegree_vertical_distance_, r_ - r - 1);
+  }
+
+  int first_destination(int r) {
+    return std::max(0, r - outdegree_vertical_distance_);
   }
 
   void apply_lambda(double lambda);
