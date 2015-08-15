@@ -7,6 +7,7 @@ MEX = mex
 CXXFLAGS = -Wall -Wextra -O2 -std=c++98 -ansi -fPIC
 MEXCXXFLAGS = -Wall -Wextra -O2 -std=c++98 -ansi
 GTESTDIR = /usr/src/gtest
+NUMPY_INCLUDE_DIR = /usr/local/lib/python2.7/site-packages/numpy/core/include
 
 SRCDIR = src
 DEPDIR = .deps
@@ -48,6 +49,19 @@ emd_flow_test: $(EMD_FLOW_TEST_OBJS:%=$(OBJDIR)/%)
 
 run_emd_flow_test: emd_flow_test
 	./emd_flow_test
+
+
+# swig file
+SWIGFILE_OBJECTS = emd_flow_network_sap.o
+SWIGFILE_SRC_DEPS = python_helpers.h emd_flow_network_sap.h emd_flow.i
+
+emd_flow_swig: $(SWIGFILE_OBJECTS:%=$(OBJDIR)/%) $(SWIGFILE_SRC_DEPS:%=$(SRCDIR)/%)
+	swig -c++ -python -builtin -outcurrentdir src/emd_flow.i
+	mkdir -p $(OBJDIR)
+	$(CXX) $(CXXFLAGS) `python-config --includes` -I $(NUMPY_INCLUDE_DIR) -c emd_flow_wrap.cxx -I src -o $(OBJDIR)/emd_flow_wrap.o
+	$(CXX) -shared $(OBJDIR)/emd_flow_wrap.o $(SWIGFILE_OBJECTS:%=$(OBJDIR)/%) -o _emd_flow.so `python-config --ldflags`
+	rm -f emd_flow_wrap.cxx
+
 
 # emd_flow MEX file
 MEXFILE_OBJECTS = emd_flow.o emd_flow_network_factory.o emd_flow_network_sap.o

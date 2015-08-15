@@ -9,3 +9,6 @@ emd_flow_test
 emd_flow.mexa64
 emd_flow.mexmaci64
 emd-flow.tar.gz
+*.so
+*.pyc
+emd_flow.py
