@@ -2,12 +2,12 @@
 #
 # This makefile is based on http://make.paulandlesley.org/autodep.html .
 
+GTESTDIR = gtest
+NUMPY_INCLUDE_DIR = /usr/local/lib/python2.7/site-packages/numpy/core/include
 CXX = g++
 MEX = mex
-CXXFLAGS = -Wall -Wextra -O2 -std=c++98 -ansi -fPIC
+CXXFLAGS = -Wall -Wextra -O2 -std=c++98 -ansi -fPIC -I $(GTESTDIR)/include
 MEXCXXFLAGS = -Wall -Wextra -O2 -std=c++98 -ansi
-GTESTDIR = /usr/src/gtest
-NUMPY_INCLUDE_DIR = /usr/local/lib/python2.7/site-packages/numpy/core/include
 
 SRCDIR = src
 DEPDIR = .deps
