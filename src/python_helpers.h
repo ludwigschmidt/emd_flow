@@ -5,11 +5,11 @@
 
 #include "emd_flow_network_sap.h"
 
-void emdflow_relaxed(const double* data, int rows, int cols,
-                     const double* emd_costs, int num_emd_costs,
-                     int sparsity,
-                     double lambda,
-                     int* support, int output_rows, int output_cols) {
+void solve_relaxation(const double* data, int rows, int cols,
+                      const double* emd_costs, int num_emd_costs,
+                      int sparsity,
+                      double lambda,
+                      double* support, int output_rows, int output_cols) {
   if (num_emd_costs <= 0) {
     throw std::invalid_argument("At least one EMD cost required.");
   }
@@ -40,7 +40,7 @@ void emdflow_relaxed(const double* data, int rows, int cols,
   // numpy uses row major by default
   for (int ii = 0; ii < rows; ++ii) {
     for (int jj = 0; jj < cols; ++jj) {
-      support[ii * cols + jj] = (result[ii][jj] ? 1 : 0);
+      support[ii * cols + jj] = (result[ii][jj] ? 1.0 : 0.0);
     }
   }
 }
